@@ -12,7 +12,7 @@ const target = join(outDir, "entry.txt");
 mkdirSync(outDir, { recursive: true });
 copyFileSync(source, target);
 
-// A final newline is added by editors when saving; it isn't part of the punchline.
+// Editors append a final newline on save; that line break is not part of the punchline.
 let text = readFileSync(target, "utf8");
 if (text.endsWith("\n")) {
   text = text.slice(0, -1);
