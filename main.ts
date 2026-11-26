@@ -1,33 +1,32 @@
-// Entry for make.fun's "Monday Morning Punchlines" bounty (Node 22, standard library only):
-// it copies entry.txt from the repository root to /output/entry.txt, where
-// the gate reads it. That is all the program has to do. The entry is the
-// text itself: one word / one line, judged pairwise by an AI judge.
-//
-// Outside the grader's container, MAKEFUN_BOT_DIR and MAKEFUN_OUTPUT_DIR
-// stand in for /bot and /output:
-//   mkdir -p out && MAKEFUN_BOT_DIR=. MAKEFUN_OUTPUT_DIR=out node main.ts
+// Monday Morning Punchlines
+import { copyFileSync, mkdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 
-import { copyFileSync, mkdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+const botDir = process.env.MAKEFUN_BOT_DIR ?? "/bot";
+const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
+const limit = 200;
 
-const BOT_DIR = process.env.MAKEFUN_BOT_DIR ?? '/bot';
-const OUTPUT_DIR = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
-const MAX_CHARS = 200;
+const source = join(botDir, "entry.txt");
+const target = join(outDir, "entry.txt");
 
-mkdirSync(OUTPUT_DIR, { recursive: true });
-try {
-  copyFileSync(join(BOT_DIR, 'entry.txt'), join(OUTPUT_DIR, 'entry.txt'));
-} catch (err) {
-  console.error(`entry.txt could not be copied from ${BOT_DIR}: ${(err as Error).message}`);
+mkdirSync(outDir, { recursive: true });
+copyFileSync(source, target);
+
+// A final newline is added by editors when saving; it isn't part of the punchline.
+let text = readFileSync(target, "utf8");
+if (text.endsWith("\n")) {
+  text = text.slice(0, -1);
+}
+
+if (text.length === 0) {
+  console.error("Error: entry.txt is empty.");
   process.exit(1);
 }
 
-// Validate what was copied: the gate reads /output/entry.txt, so a bad file
-// should fail here with a clear message instead of failing silently.
-const copied = readFileSync(join(OUTPUT_DIR, 'entry.txt'), 'utf8');
-const text = copied.replace(/\r?\n$/, '');
-if (text.length === 0 || text.length > MAX_CHARS) {
-  console.error(`entry.txt must hold 1-${MAX_CHARS} characters, got ${text.length}.`);
+if (text.length > limit) {
+  console.error(`Error: entry is ${text.length} characters, over the ${limit} character limit.`);
   process.exit(1);
 }
-console.log(`Entry (${text.length} chars): ${text}`);
+
+console.log(`Character count: ${text.length}`);
+console.log(text);
